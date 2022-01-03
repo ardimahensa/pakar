@@ -1,0 +1,163 @@
+<?php
+
+if (!defined('BASEPATH'))
+    exit('No direct script access allowed');
+
+class Ciri extends CI_Controller
+{
+    function __construct()
+    {
+        parent::__construct();
+        $this->load->model('M_ciri');
+        $this->load->library('form_validation');
+    }
+
+    public function index()
+    {
+        $q = urldecode($this->input->get('q', TRUE));
+        $start = intval($this->input->get('start'));
+        
+        if ($q <> '') {
+            $config['base_url'] = base_url() . 'ciri/index.html?q=' . urlencode($q);
+            $config['first_url'] = base_url() . 'ciri/index.html?q=' . urlencode($q);
+        } else {
+            $config['base_url'] = base_url() . 'ciri/index.html';
+            $config['first_url'] = base_url() . 'ciri/index.html';
+        }
+
+        $config['per_page'] = 10;
+        $config['page_query_string'] = TRUE;
+        $config['total_rows'] = $this->M_ciri->total_rows($q);
+        $ciri = $this->M_ciri->get_limit_data($config['per_page'], $start, $q);
+
+        $this->load->library('pagination');
+        $this->pagination->initialize($config);
+
+        $data = array(
+            'ciri_data' => $ciri,
+            'q' => $q,
+            'pagination' => $this->pagination->create_links(),
+            'total_rows' => $config['total_rows'],
+            'start' => $start,
+            'konten' => 'ciri/ciri_list',
+            'judul' => 'Data Ciri',
+        );
+        $this->load->view('v_index', $data);
+    }
+
+    public function read($id) 
+    {
+        $row = $this->M_ciri->get_by_id($id);
+        if ($row) {
+            $data = array(
+		'id_ciri' => $row->id_ciri,
+		'kd_ciri' => $row->kd_ciri,
+		'ciri_ciri' => $row->ciri_ciri,
+	    );
+            $this->load->view('ciri/ciri_read', $data);
+        } else {
+            $this->session->set_flashdata('message', 'Record Not Found');
+            redirect(site_url('ciri'));
+        }
+    }
+
+    public function create() 
+    {
+        $data = array(
+            'button' => 'Create',
+            'action' => site_url('ciri/create_action'),
+	    'id_ciri' => set_value('id_ciri'),
+	    'kd_ciri' => set_value('kd_ciri'),
+	    'ciri_ciri' => set_value('ciri_ciri'),
+        'konten' => 'ciri/ciri_form',
+            'judul' => 'Data Ciri',
+	);
+        $this->load->view('v_index', $data);
+    }
+    
+    public function create_action() 
+    {
+        $this->_rules();
+
+        if ($this->form_validation->run() == FALSE) {
+            $this->create();
+        } else {
+            $data = array(
+		'kd_ciri' => $this->input->post('kd_ciri',TRUE),
+		'ciri_ciri' => $this->input->post('ciri_ciri',TRUE),
+	    );
+
+            $this->M_ciri->insert($data);
+            $this->session->set_flashdata('message', 'Create Record Success');
+            redirect(site_url('ciri'));
+        }
+    }
+    
+    public function update($id) 
+    {
+        $row = $this->M_ciri->get_by_id($id);
+
+        if ($row) {
+            $data = array(
+                'button' => 'Update',
+                'action' => site_url('ciri/update_action'),
+		'id_ciri' => set_value('id_ciri', $row->id_ciri),
+		'kd_ciri' => set_value('kd_ciri', $row->kd_ciri),
+		'ciri_ciri' => set_value('ciri_ciri', $row->ciri_ciri),
+        'konten' => 'ciri/ciri_form',
+            'judul' => 'Data Ciri',
+	    );
+            $this->load->view('v_index', $data);
+        } else {
+            $this->session->set_flashdata('message', 'Record Not Found');
+            redirect(site_url('ciri'));
+        }
+    }
+    
+    public function update_action() 
+    {
+        $this->_rules();
+
+        if ($this->form_validation->run() == FALSE) {
+            $this->update($this->input->post('id_ciri', TRUE));
+        } else {
+            $data = array(
+		'kd_ciri' => $this->input->post('kd_ciri',TRUE),
+		'ciri_ciri' => $this->input->post('ciri_ciri',TRUE),
+	    );
+
+            $this->M_ciri->update($this->input->post('id_ciri', TRUE), $data);
+            $this->session->set_flashdata('message', 'Update Record Success');
+            redirect(site_url('ciri'));
+        }
+    }
+    
+    public function delete($id) 
+    {
+        $row = $this->M_ciri->get_by_id($id);
+
+        if ($row) {
+            $this->M_ciri->delete($id);
+            $this->session->set_flashdata('message', 'Delete Record Success');
+            redirect(site_url('ciri'));
+        } else {
+            $this->session->set_flashdata('message', 'Record Not Found');
+            redirect(site_url('ciri'));
+        }
+    }
+    public function _rules() 
+    {
+	$this->form_validation->set_rules('kd_ciri', 'kd ciri', 'trim|required');
+	$this->form_validation->set_rules('ciri_ciri', 'ciri ciri', 'trim|required');
+
+	$this->form_validation->set_rules('id_ciri', 'id_ciri', 'trim');
+	$this->form_validation->set_error_delimiters('<span class="text-danger">', '</span>');
+    }
+
+}
+
+/* End of file Ciri.php */
+/* Location: ./application/controllers/Ciri.php */
+/* Please DO NOT modify this information : */
+/* Generated by Harviacode Codeigniter CRUD Generator 2017-09-28 10:21:36 */
+/* http://harviacode.com */
